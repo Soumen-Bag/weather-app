@@ -1,24 +1,24 @@
 import { StyleSheet, Text, View,ScrollView,StatusBar,ActivityIndicator } from 'react-native'
 import React,{useState,useEffect} from 'react'
 import Weather from './Screens/Weather';
-
+import SearchBar from './Screens/SearchBar';
 
 const App = () => {
     const API_KEY="50bb17463008c267cf34640dccc91089";
     const [weatherData,setWeatherData]=useState(null)
     const [loaded,setLoaded]=useState(true)
-
+    const [cityName,setCityName] = useState('Kolkata')
     async function fetchWeatherData(cityName)
     {
         setLoaded(false);
-        const API=`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${API_KEY}`
+        const API=`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${API_KEY}&units=metric`
         try{
             const response=await fetch(API);
-            
-            if(response.status=200)
+            const data=await response.json();
+            if(data?.cod==200)
             {
-                const data=await response.json();
                 setWeatherData(data);
+                console.log(data)
             }
             else
             {
@@ -29,12 +29,13 @@ const App = () => {
         catch(error)
         {
             console.log(error);
+            setWeatherData(null)
         }
     }
     useEffect(()=>{
-        fetchWeatherData('Mumbai');
-        console.log(weatherData)
-    },[])
+        fetchWeatherData(cityName);
+        //console.log(weatherData)
+    },[cityName])
 
     if(!loaded)
     {
@@ -44,21 +45,25 @@ const App = () => {
             </View>
         )
     }
-    else if(weatherData==null)
+    else if(weatherData === null)
     {
         return (
-            <View>
-                <Text>
-                    test
-                </Text>
+            <View style={styles.container}>
+                <SearchBar fetchWeatherData={fetchWeatherData}/>
+                <Text style={styles.primarytxt}>City not Found! Try different City</Text>
             </View>
         )  
     }
   return (
     <View style={styles.container}>
         <StatusBar backgroundColor={"#f09"} />
+        {console.log("first",weatherData)}
         {
-            weatherData !== null ? <Weather weatherData={weatherData} /> : null
+            
+            weatherData !== null && (
+                <Weather weatherData={weatherData} 
+            fetchWeatherData={fetchWeatherData}/> 
+            )
         }
         {/*  */}
     </View>
@@ -72,5 +77,9 @@ const styles = StyleSheet.create({
         flex:1,
         justifyContent:'center',
         alignItems:'center'
+    },
+    primarytxt: {
+        margin:20,
+        fontSize:28
     }
 })
